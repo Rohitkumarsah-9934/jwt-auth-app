@@ -1,0 +1,5 @@
+@import "tailwindcss";
+
+body {
+  @apply min-h-screen bg-gradient-to-br from-green-700 via-emerald-900 to-blue-900 bg-fixed text-slate-800 antialiased;
+}
