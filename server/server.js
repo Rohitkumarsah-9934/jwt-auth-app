@@ -34,21 +34,36 @@ app.use((req, res) => {
   });
 });
 
+// Vercel serverless function
+let dbConnectionPromise;
 
-module.exports = app;
+async function handler(req, res) {
+  try {
+    if (!dbConnectionPromise) {
+      dbConnectionPromise = connectDB().catch((error) => {
+        dbConnectionPromise = null;
+        throw error;
+      });
+    }
 
-// Local development ke liye hi listen karo
+    await dbConnectionPromise;
+    return app(req, res);
+  } catch (error) {
+    console.error('Database connection failed:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Database connection failed',
+    });
+  }
+}
+
+module.exports = handler;
+
+// Local development
 if (require.main === module) {
   const PORT = process.env.PORT || 5000;
 
-  connectDB()
-    .then(() => {
-      app.listen(PORT, () => {
-        console.log(`Server running on port ${PORT}`);
-      });
-    })
-    .catch((error) => {
-      console.error('Database connection failed:', error);
-      process.exit(1);
-    });
+  handler.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
 }
